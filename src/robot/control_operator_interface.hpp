@@ -1,3 +1,6 @@
+#ifndef CONTROL_OPERATOR_INTERFACE_HPP_
+#define CONTROL_OPERATOR_INTERFACE_HPP_
+
 #include "tap/algorithms/linear_interpolation_predictor.hpp"
 #include "tap/algorithms/ramp.hpp"
 #include "tap/drivers.hpp"
@@ -123,3 +126,4 @@ private:
 
 }  // namespace xcysrc
 
+#endif  // CONTROL_OPERATOR_INTERFACE_HPP_

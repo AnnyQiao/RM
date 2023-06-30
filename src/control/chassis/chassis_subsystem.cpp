@@ -1,4 +1,6 @@
 #include "src/control/chassis/chassis_subsystem.hpp"
+#include "tap/algorithms/math_user_utils.hpp"
+using namespace tap::algorithms;
 
 namespace xcysrc
 {

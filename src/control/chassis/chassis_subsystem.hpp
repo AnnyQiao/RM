@@ -104,25 +104,6 @@ private:
     tap::motor::DjiMotor* motors[4];
     float desiredWheelRPM[4];
     float desiredRotation = 0;
-    float limitVal(float val, float min, float max)
-    {
-        if (min > max)
-        {
-            return val;
-        }
-        if (val < min)
-        {
-            return min;
-        }
-        else if (val > max)
-        {
-            return max;
-        }
-        else
-        {
-            return val;
-        }
-    }
 };
 
 }  // namespace chassis

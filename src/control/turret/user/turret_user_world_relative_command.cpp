@@ -31,8 +31,6 @@ TurretUserWorldRelativeCommand::TurretUserWorldRelativeCommand(
     TurretSubsystem *turretSubsystem,
     algorithms::TurretYawControllerInterface *chassisImuYawController,
     algorithms::TurretPitchControllerInterface *chassisImuPitchController,
-    algorithms::TurretYawControllerInterface *turretImuYawController,
-    algorithms::TurretPitchControllerInterface *turretImuPitchController,
     float userYawInputScalar,
     float userPitchInputScalar,
     uint8_t turretID)
@@ -45,15 +43,6 @@ TurretUserWorldRelativeCommand::TurretUserWorldRelativeCommand(
           chassisImuPitchController,
           userYawInputScalar,
           userPitchInputScalar,
-          turretID),
-      turretWRTurretImuCommand(
-          drivers,
-          controlOperatorInterface,
-          turretSubsystem,
-          turretImuYawController,
-          turretImuPitchController,
-          userYawInputScalar,
-          userPitchInputScalar,
           turretID)
 {
     comprisedCommandScheduler.registerSubsystem(turretSubsystem);
@@ -62,29 +51,19 @@ TurretUserWorldRelativeCommand::TurretUserWorldRelativeCommand(
 
 bool TurretUserWorldRelativeCommand::isReady()
 {
-    return turretWRChassisImuCommand.isReady() || turretWRTurretImuCommand.isReady();
+    return turretWRChassisImuCommand.isReady();
 }
 
 void TurretUserWorldRelativeCommand::initialize()
 {
-    // Try and use turret IMU, otherwise default to chassis IMU.
-    if (turretWRTurretImuCommand.isReady())
-    {
-        comprisedCommandScheduler.addCommand(&turretWRTurretImuCommand);
-    }
-    else
-    {
-        comprisedCommandScheduler.addCommand(&turretWRChassisImuCommand);
-    }
+    comprisedCommandScheduler.addCommand(&turretWRChassisImuCommand);
 }
 
 void TurretUserWorldRelativeCommand::execute()
 {
     // Re-initialize if no commands scheduled or if the turret WR Turret IMU command
     // is ready and isn't scheduled
-    if (comprisedCommandScheduler.getAddedCommandBitmap() == 0 ||
-        (!comprisedCommandScheduler.isCommandScheduled(&turretWRTurretImuCommand) &&
-         turretWRTurretImuCommand.isReady()))
+    if (comprisedCommandScheduler.getAddedCommandBitmap() == 0)
     {
         initialize();
     }
@@ -94,12 +73,11 @@ void TurretUserWorldRelativeCommand::execute()
 
 bool TurretUserWorldRelativeCommand::isFinished() const
 {
-    return turretWRChassisImuCommand.isFinished() && turretWRTurretImuCommand.isFinished();
+    return turretWRChassisImuCommand.isFinished();
 }
 
 void TurretUserWorldRelativeCommand::end(bool interrupted)
 {
-    comprisedCommandScheduler.removeCommand(&turretWRTurretImuCommand, interrupted);
     comprisedCommandScheduler.removeCommand(&turretWRChassisImuCommand, interrupted);
 }
 

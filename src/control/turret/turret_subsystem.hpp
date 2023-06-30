@@ -27,11 +27,8 @@
 #include "tap/motor/dji_motor.hpp"
 
 
-#if defined(PLATFORM_HOSTED) && defined(ENV_UNIT_TESTS)
-#include "aruwsrc/mock/turret_motor_mock.hpp"
-#else
+
 #include "turret_motor.hpp"
-#endif
 
 #include "tap/util_macros.hpp"
 
@@ -72,8 +69,7 @@ public:
         tap::motor::MotorInterface* pitchMotor,
         tap::motor::MotorInterface* yawMotor,
         const TurretMotorConfig& pitchMotorConfig,
-        const TurretMotorConfig& yawMotorConfig,
-        const xcysrc::can::TurretMCBCanComm* turretMCB);
+        const TurretMotorConfig& yawMotorConfig);
 
     void initialize() override;
 
@@ -85,8 +81,6 @@ public:
 
     mockable inline bool isOnline() const { return pitchMotor.isOnline() && yawMotor.isOnline(); }
 
-    const inline xcysrc::can::TurretMCBCanComm* getTurretMCB() const { return turretMCB; }
-
 #ifdef ENV_UNIT_TESTS
     testing::NiceMock<mock::TurretMotorMock> pitchMotor;
     testing::NiceMock<mock::TurretMotorMock> yawMotor;
@@ -97,8 +91,6 @@ public:
     TurretMotor yawMotor;
 #endif
 
-protected:
-    const xcysrc::can::TurretMCBCanComm* turretMCB;
 };  // class TurretSubsystem
 
 }  // namespace xcysrc::control::turret

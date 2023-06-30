@@ -1,10 +1,8 @@
-
-
-
 #include "tap/drivers.hpp"
 
-#include "src/robot/control_operator_interface.hpp"
-#include "chassis_subsystem.hpp"
+namespace xcysrc::control{
+    class ControlOperatorInterface;
+}
 
 namespace xcysrc::chassis
 {

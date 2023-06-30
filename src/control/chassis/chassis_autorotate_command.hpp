@@ -22,13 +22,22 @@
 
 #include "tap/control/command.hpp"
 #include "tap/drivers.hpp"
-#include "chassis_rel_drive.hpp"
+
+#include "src/robot/control_operator_interface.hpp"
 #include "src/control/turret/turret_motor.hpp"
 
 namespace xcysrc::chassis
 {
 class MecanumChassisSubsystem;
-
+enum class ChassisSymmetry : uint8_t
+{
+    /** No symmetry, only one "front". */
+    SYMMETRICAL_NONE,
+    /** Front and back symmetrical. */
+    SYMMETRICAL_180,
+    /** Front, back, left, and right are symmetrical. */
+    SYMMETRICAL_90,
+};
 /**
  * A command that continuously attempts to rotate the chasis so that the turret is
  * aligned with the center of the chassis.
@@ -42,15 +51,6 @@ public:
         modm::toRadian(1.0f);
 
     /** The symmetry of the chassis. */
-    enum class ChassisSymmetry : uint8_t
-    {
-        /** No symmetry, only one "front". */
-        SYMMETRICAL_NONE,
-        /** Front and back symmetrical. */
-        SYMMETRICAL_180,
-        /** Front, back, left, and right are symmetrical. */
-        SYMMETRICAL_90,
-    };
 
     /**
      * @param[in] drivers Pointer to global drivers object.
@@ -64,7 +64,7 @@ public:
         xcysrc::control::ControlOperatorInterface* operatorInterface,
         MecanumChassisSubsystem* chassis,
         const xcysrc::control::turret::TurretMotor* yawMotor,
-        ChassisSymmetry chassisSymmetry = ChassisSymmetry::SYMMETRICAL_NONE);
+        ChassisSymmetry chassisSymmetry = ChassisSymmetry::SYMMETRICAL_180);
 
     void initialize() override;
 

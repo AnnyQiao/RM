@@ -1,90 +1,102 @@
 /*
  * Copyright (c) 2020-2021 Advanced Robotics at the University of Washington <robomstr@uw.edu>
  *
- * This file is part of taproot-examples.
+ * This file is part of aruw-mcb.
  *
- * taproot-examples is free software: you can redistribute it and/or modify
+ * aruw-mcb is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * taproot-examples is distributed in the hope that it will be useful,
+ * aruw-mcb is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with taproot-examples.  If not, see <https://www.gnu.org/licenses/>.
+ * along with aruw-mcb.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "control/chassis/chassis_subsystem.hpp"
+
 #include "tap/board/board.hpp"
 
-#include "drivers_singleton.hpp"
+#include "modm/architecture/interface/delay.hpp"
 
-static void updateIo(tap::Drivers *drivers);
+/* arch includes ------------------------------------------------------------*/
+#include "tap/architecture/periodic_timer.hpp"
+#include "tap/architecture/profiler.hpp"
+
+/* communication includes ---------------------------------------------------*/
+#include "src/drivers_singleton.hpp"
+
+/* error handling includes --------------------------------------------------*/
+#include "tap/errors/create_errors.hpp"
+
+/* control includes ---------------------------------------------------------*/
+#include "tap/architecture/clock.hpp"
+
+#include "src/robot/robot_control.hpp"
+
+static constexpr float MAIN_LOOP_FREQUENCY = 500.0f;
+static constexpr float MAHONY_KP = 0.1f;
+
+/* define timers here -------------------------------------------------------*/
+tap::arch::PeriodicMilliTimer sendMotorTimeout(1000.0f / MAIN_LOOP_FREQUENCY);
+
+// Place any sort of input/output initialization here. For example, place
+// serial init stuff here.
 static void initializeIo(tap::Drivers *drivers);
-::Drivers *drivers = ::DoNotUse_getDrivers();
-tap::arch::PeriodicMilliTimer remoteControl(2);
+
+// Anything that you would like to be called place here. It will be called
+// very frequently. Use PeriodicMilliTimers if you don't want something to be
+// called as frequently.
+static void updateIo(tap::Drivers *drivers);
+
+using namespace xcysrc::standard;
 
 int main()
 {
+
     /*
      * NOTE: We are using DoNotUse_getDrivers here because in the main
      *      robot loop we must access the singleton drivers to update
      *      IO states and run the scheduler.
      */
-    Board::initialize();
+    Drivers *drivers = DoNotUse_getDrivers();
 
+    Board::initialize();
     initializeIo(drivers);
-    xcysrc::chassis::MecanumChassisSubsystem chassis(drivers);
-    drivers->leds.set(tap::gpio::Leds::Red, true);
-    modm::delay_ms(1000);
-    drivers->leds.set(tap::gpio::Leds::Red, false);
-    chassis.initialize();
+    initSubsystemCommands(drivers);
+
     while (1)
     {
-        if (remoteControl.execute())
+        // do this as fast as you can
+        PROFILE(drivers->profiler, updateIo, (drivers));
+
+        if (sendMotorTimeout.execute())
         {
-            chassis.setDesiredOutput(
-                drivers->remote.getChannel(tap::Remote::Channel::LEFT_HORIZONTAL) * 4500.0f,
-                drivers->remote.getChannel(tap::Remote::Channel::LEFT_VERTICAL) * 4500.0f,
-                drivers->remote.getChannel(tap::Remote::Channel::RIGHT_HORIZONTAL) * -4500.0f);
-
-            chassis.refresh();
-            bool b = drivers->remote.getChannel(tap::Remote::Channel::LEFT_VERTICAL) < 0.5;
-            drivers->leds.set(tap::gpio::Leds::Blue, b);
-
-            drivers->djiMotorTxHandler.processCanSendData();
+            PROFILE(drivers->profiler, drivers->commandScheduler.run, ());
+            PROFILE(drivers->profiler, drivers->djiMotorTxHandler.processCanSendData, ());
         }
-        updateIo(drivers);
         modm::delay_us(10);
     }
-
     return 0;
 }
 
 static void initializeIo(tap::Drivers *drivers)
 {
-    // drivers->analog.init();
-    // drivers->pwm.init();
-    // drivers->digital.init();
+    drivers->analog.init();
+    drivers->pwm.init();
+    drivers->digital.init();
     drivers->leds.init();
     drivers->can.initialize();
-    // drivers->errorController.init();
     drivers->remote.initialize();
-    // drivers->refSerial.initialize();
-    // drivers->terminalSerial.initialize();
-    // drivers->schedulerTerminalHandler.init();
-    // drivers->djiMotorTerminalSerialHandler.init();
-    drivers->leds.set(tap::gpio::Leds::Green, true);
-    modm::delay_ms(1000);
-    drivers->leds.set(tap::gpio::Leds::Green, false);
+    drivers->refSerial.initialize();
 }
 
 static void updateIo(tap::Drivers *drivers)
 {
-    // drivers->refSerial.updateSerial();
-    drivers->remote.read();
     drivers->canRxHandler.pollCanData();
+    drivers->refSerial.updateSerial();
+    drivers->remote.read();
 }

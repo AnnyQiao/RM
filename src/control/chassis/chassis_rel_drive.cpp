@@ -21,8 +21,10 @@
 
 #include "tap/drivers.hpp"
 
-// #include "src/robot/control_operator_interface.hpp"
+#include "src/robot/control_operator_interface.hpp"
 #include "tap/algorithms/math_user_utils.hpp"
+
+#include "chassis_subsystem.hpp"
 
 using namespace tap::algorithms;
 

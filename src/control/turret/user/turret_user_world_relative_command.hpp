@@ -67,9 +67,6 @@ public:
      * @param[in] chassisImuYawController World frame turret controller that uses the chassis IMU.
      * @param[in] chassisImuPitchController Turret controller that is used when the turret IMU is in
      * use.
-     * @param[in] turretImuYawController World frame turret controller that uses the turret IMU.
-     * @param[in] turretImuPitchController Turret controller that is used when the turret IMU is in
-     * use. Doesn't strictly have to be world relative.
      */
     TurretUserWorldRelativeCommand(
         tap::Drivers *drivers,
@@ -77,8 +74,6 @@ public:
         TurretSubsystem *turretSubsystem,
         algorithms::TurretYawControllerInterface *chassisImuYawController,
         algorithms::TurretPitchControllerInterface *chassisImuPitchController,
-        algorithms::TurretYawControllerInterface *turretImuYawController,
-        algorithms::TurretPitchControllerInterface *turretImuPitchController,
         float userYawInputScalar,
         float userPitchInputScalar,
         uint8_t turretID = 0);
@@ -97,7 +92,6 @@ public:
 
 private:
     TurretUserControlCommand turretWRChassisImuCommand;
-    TurretUserControlCommand turretWRTurretImuCommand;
 };  // class TurretUserWorldRelativeCommand
 
 }  // namespace xcysrc::control::turret::user

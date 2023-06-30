@@ -24,11 +24,6 @@
 
 #include "modm/math/geometry/vector3.hpp"
 
-namespace xcysrc::can
-{
-class TurretMCBCanComm;
-}
-
 namespace xcysrc::control::turret
 {
 /**
