@@ -7,8 +7,8 @@ namespace xcysrc
 namespace chassis
 {
 
-// modm::Pair<int, float> MecanumChassisSubsystem::lastComputedMaxWheelSpeed =
-//     CHASSIS_POWER_TO_MAX_SPEED_LUT[0];
+modm::Pair<int, float> MecanumChassisSubsystem::lastComputedMaxWheelSpeed =
+    CHASSIS_POWER_TO_MAX_SPEED_LUT[0];
 
 MecanumChassisSubsystem::MecanumChassisSubsystem(tap::Drivers* drivers)
     : tap::control::chassis::ChassisSubsystemInterface(drivers),
