@@ -31,7 +31,7 @@ namespace xcysrc::control::turret
 class TurretMotor;
 static constexpr float TURRET_CG_X = 30.17;
 static constexpr float TURRET_CG_Z = 34.02;
-static constexpr float GRAVITY_COMPENSATION_SCALAR = 7000;
+static constexpr float GRAVITY_COMPENSATION_SCALAR = 300;
 }
 
 namespace xcysrc::control::turret::algorithms
