@@ -66,8 +66,13 @@ int main()
 
     Board::initialize();
     initializeIo(drivers);
+    drivers->leds.set(tap::gpio::Leds::Red, true);
+    modm::delay_ms(1000);
+    drivers->leds.set(tap::gpio::Leds::Red, false);
     initSubsystemCommands(drivers);
-
+    drivers->leds.set(tap::gpio::Leds::Green, true);
+    modm::delay_ms(1000);
+    drivers->leds.set(tap::gpio::Leds::Green, false);
     while (1)
     {
         // do this as fast as you can

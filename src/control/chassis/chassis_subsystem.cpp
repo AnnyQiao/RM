@@ -7,8 +7,8 @@ namespace xcysrc
 namespace chassis
 {
 
-// modm::Pair<int, float> MecanumChassisSubsystem::lastComputedMaxWheelSpeed =
-//     CHASSIS_POWER_TO_MAX_SPEED_LUT[0];
+modm::Pair<int, float> MecanumChassisSubsystem::lastComputedMaxWheelSpeed =
+    CHASSIS_POWER_TO_MAX_SPEED_LUT[0];
 
 MecanumChassisSubsystem::MecanumChassisSubsystem(tap::Drivers* drivers)
     : tap::control::chassis::ChassisSubsystemInterface(drivers),
@@ -28,13 +28,13 @@ MecanumChassisSubsystem::MecanumChassisSubsystem(tap::Drivers* drivers)
           drivers,
           tap::motor::MOTOR1,
           tap::can::CanBus::CAN_BUS1,
-          true,
+          false,
           "right front drive motor"),
       rightBackMotor(
           drivers,
           tap::motor::MOTOR4,
           tap::can::CanBus::CAN_BUS1,
-          true,
+          false,
           "right back drive motor"),
       velocityPid{
           modm::Pid<float>(
@@ -95,19 +95,19 @@ void MecanumChassisSubsystem::calculateOutput(float x, float y, float r, float m
         modm::toRadian(chassisRotationRatio + GIMBAL_X_OFFSET + GIMBAL_Y_OFFSET);
     float chassisRotateTranslated = modm::toDegree(r) / chassisRotationRatio;
     desiredWheelRPM[LF] = limitVal(
-        y + x - chassisRotateTranslated * leftFrontRotationRatio,
+        -y + x - chassisRotateTranslated * leftFrontRotationRatio,
         -maxWheelSpeed,
         maxWheelSpeed);
     desiredWheelRPM[RF] = limitVal(
-        y - x + chassisRotateTranslated * rightFrontRotationRatio,
+        -y - x - chassisRotateTranslated * rightFrontRotationRatio,
         -maxWheelSpeed,
         maxWheelSpeed);
     desiredWheelRPM[LB] = limitVal(
-        y - x - chassisRotateTranslated * leftBackRotationRatio,
+        y + x - chassisRotateTranslated * leftBackRotationRatio,
         -maxWheelSpeed,
         maxWheelSpeed);
     desiredWheelRPM[RB] = limitVal(
-        y + x + chassisRotateTranslated * rightBackRotationRatio,
+        y - x - chassisRotateTranslated * rightBackRotationRatio,
         -maxWheelSpeed,
         maxWheelSpeed);
 
