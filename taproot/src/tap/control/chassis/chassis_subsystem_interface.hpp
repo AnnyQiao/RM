@@ -29,8 +29,7 @@ namespace tap::control::chassis
 class ChassisSubsystemInterface : public Subsystem
 {
 public:
-    ChassisSubsystemInterface(Drivers *drivers) : Subsystem(drivers) {
-    }
+    ChassisSubsystemInterface(Drivers *drivers) : Subsystem(drivers) {}
 
     /**
      * @return the number of chassis motors

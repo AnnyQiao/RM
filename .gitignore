@@ -1,0 +1,4 @@
+/rm-dev-board-*/**/taproot
+/rm-dev-board-*/**/build
+/**/project.xml.log
+/**/.sconsign.dblite
