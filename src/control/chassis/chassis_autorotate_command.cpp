@@ -92,6 +92,10 @@ void ChassisAutorotateCommand::execute()
 
         float turretAngleFromCenter = yawMotor->getAngleFromCenter();
 
+        if (abs(turretAngleFromCenter) < 5) {
+            turretAngleFromCenter = 0;
+        }
+
         if (chassisAutorotating)
         {
             float maxAngleFromCenter = M_PI;
