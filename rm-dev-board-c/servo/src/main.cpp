@@ -19,6 +19,7 @@
 
 
 #include "tap/board/board.hpp"
+#include "modm/platform/timer/timer_1.hpp"
 
 #include "modm/architecture/interface/delay.hpp"
 
@@ -37,6 +38,8 @@
 
 #include "src/robot/robot_control.hpp"
 
+#include "tap/communication/gpio/pwm.hpp"
+
 static constexpr float MAIN_LOOP_FREQUENCY = 500.0f;
 static constexpr float MAHONY_KP = 0.1f;
 
@@ -53,6 +56,36 @@ static void initializeIo(tap::Drivers *drivers);
 static void updateIo(tap::Drivers *drivers);
 
 using namespace xcysrc::standard;
+
+static void testPWM(tap::Drivers *drivers)
+{
+    drivers->leds.set(tap::gpio::Leds::Blue, true);
+    modm::delay_ms(1000);
+    drivers->leds.set(tap::gpio::Leds::Blue, false);
+    tap::gpio::Pwm::Pin pwmPin1= tap::gpio::Pwm::Pin::C1;
+    drivers->pwm.setTimerFrequency(tap::gpio::Pwm::Timer::TIMER1, 100);
+
+    tap::gpio::Pwm::Pin pwmPin2= tap::gpio::Pwm::Pin::C2;
+    drivers->pwm.setTimerFrequency(tap::gpio::Pwm::Timer::TIMER2, 100);
+
+    drivers->pwm.write(0.2,pwmPin1);
+    drivers->pwm.write(0.2,pwmPin2);
+    modm::delay_ms(2000);
+
+    drivers->pwm.write(0.1,pwmPin1);
+    drivers->pwm.write(0.1,pwmPin2);
+    modm::delay_ms(10000);
+    
+    drivers->pwm.write(0.15,pwmPin1);
+    drivers->pwm.write(0.15,pwmPin2);
+    modm::delay_ms(10000);
+
+
+
+// every time robot got killed or power off, initialize the gpio again
+// better to make it to the button
+}
+
 
 int main()
 {
@@ -72,7 +105,8 @@ int main()
     initSubsystemCommands(drivers);
     drivers->leds.set(tap::gpio::Leds::Green, true);
     modm::delay_ms(1000);
-    drivers->leds.set(tap::gpio::Leds::Green, false);
+    drivers->leds.set(tap::gpio::Leds::Green, false);     
+    testPWM(drivers);
     while (1)
     {
         // do this as fast as you can
