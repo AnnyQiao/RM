@@ -66,19 +66,16 @@ static void testPWM(tap::Drivers *drivers)
     drivers->pwm.setTimerFrequency(tap::gpio::Pwm::Timer::TIMER1, 100);
 
     tap::gpio::Pwm::Pin pwmPin2= tap::gpio::Pwm::Pin::C2;
-    drivers->pwm.setTimerFrequency(tap::gpio::Pwm::Timer::TIMER2, 100);
-
     drivers->pwm.write(0.2,pwmPin1);
     drivers->pwm.write(0.2,pwmPin2);
     modm::delay_ms(2000);
-
     drivers->pwm.write(0.1,pwmPin1);
     drivers->pwm.write(0.1,pwmPin2);
-    modm::delay_ms(10000);
-    
-    drivers->pwm.write(0.15,pwmPin1);
-    drivers->pwm.write(0.15,pwmPin2);
-    modm::delay_ms(10000);
+
+    modm::delay_ms(5000);
+    drivers->pwm.write(0.125,pwmPin1);
+    drivers->pwm.write(0.125,pwmPin2);
+    modm::delay_ms(20000);
 
 
 
