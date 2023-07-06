@@ -22,6 +22,7 @@
 #include "modm/platform/timer/timer_1.hpp"
 
 #include "modm/architecture/interface/delay.hpp"
+#include "modm/architecture/interface/interrupt.hpp"
 
 /* arch includes ------------------------------------------------------------*/
 #include "tap/architecture/periodic_timer.hpp"
@@ -40,6 +41,11 @@
 
 #include "tap/communication/gpio/pwm.hpp"
 
+#include "src/control/turret/turret_friction_wheel.cpp"
+
+#include "tap/algorithms/smooth_pid.hpp"
+
+
 static constexpr float MAIN_LOOP_FREQUENCY = 500.0f;
 static constexpr float MAHONY_KP = 0.1f;
 
@@ -57,32 +63,36 @@ static void updateIo(tap::Drivers *drivers);
 
 using namespace xcysrc::standard;
 
-static void testPWM(tap::Drivers *drivers)
+static void agitatorSpin(tao::Drivers *drivers)
 {
-    drivers->leds.set(tap::gpio::Leds::Blue, true);
-    modm::delay_ms(1000);
-    drivers->leds.set(tap::gpio::Leds::Blue, false);
-    tap::gpio::Pwm::Pin pwmPin1= tap::gpio::Pwm::Pin::C1;
-    drivers->pwm.setTimerFrequency(tap::gpio::Pwm::Timer::TIMER1, 100);
-
-    tap::gpio::Pwm::Pin pwmPin2= tap::gpio::Pwm::Pin::C2;
-    drivers->pwm.write(0.2,pwmPin1);
-    drivers->pwm.write(0.2,pwmPin2);
-    modm::delay_ms(2000);
-    drivers->pwm.write(0.1,pwmPin1);
-    drivers->pwm.write(0.1,pwmPin2);
-
-    modm::delay_ms(5000);
-    drivers->pwm.write(0.125,pwmPin1);
-    drivers->pwm.write(0.125,pwmPin2);
-    modm::delay_ms(20000);
-
-
-
-// every time robot got killed or power off, initialize the gpio again
-// better to make it to the button
+    static constexpr tap::motor::MotorId agitatorID = tap::motor::MOTOR7;
+    static constexpr tap::can::CanBus CAN_BUS = tap::can::CanBus::CAN_BUS1;
 }
 
+int velocitySimplePid()
+{
+    tap::algorithms::SmoothPid velocityPidController(10, 0, 0, 0, 8000, 1, 0, 1, 0);
+    while (1)
+    {
+        if (sendMotorTimeout.execute())
+        {
+            // bool b = drivers->digital.read(tap::gpio::Digital::Button);
+            bool b = drivers->remote.getChannel(tap::Remote::Channel::LEFT_VERTICAL) < 0.5;
+
+            velocityPidController.runControllerDerivateError(
+                (b ? 0 : DESIRED_RPM) - motor.getShaftRPM(),
+                1);
+            motor.setDesiredOutput(static_cast<int32_t>(velocityPidController.getOutput()));
+
+            drivers->djiMotorTxHandler.processCanSendData();
+            drivers->leds.set(tap::gpio::Leds::Blue, b);
+        }
+        drivers->remote.read();
+        drivers->canRxHandler.pollCanData();
+        modm::delay_us(10);
+    }
+    return 0;
+}
 
 int main()
 {
@@ -102,8 +112,8 @@ int main()
     initSubsystemCommands(drivers);
     drivers->leds.set(tap::gpio::Leds::Green, true);
     modm::delay_ms(1000);
-    drivers->leds.set(tap::gpio::Leds::Green, false);     
-    testPWM(drivers);
+    drivers->leds.set(tap::gpio::Leds::Green, false);   
+    
     while (1)
     {
         // do this as fast as you can
