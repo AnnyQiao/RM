@@ -44,17 +44,17 @@ namespace standard_control
 
 static constexpr xcysrc::control::turret::TurretMotorConfig PITCH_MOTOR_CONFIG = {
     .startAngle = M_PI_2,
-    .startEncoderValue = 6030,
-    .minAngle = modm::toRadian(75),
-    .maxAngle = modm::toRadian(115),
+    .startEncoderValue = 6300,
+    .minAngle = modm::toRadian(80),
+    .maxAngle = modm::toRadian(120),
     .limitMotorAngles = true,
 };
 namespace chassis_rel
 {
 static constexpr tap::algorithms::SmoothPidConfig YAW_PID_CONFIG = {
-    .kp = 229'183.1f,
+    .kp = 59'183.1f,
     .ki = 0.0f,
-    .kd = 10'886.2f,
+    .kd = 5000.2f,
     .maxICumulative = 0.0f,
     .maxOutput = 32'000.0f,
     .tQDerivativeKalman = 1.0f,
@@ -66,10 +66,10 @@ static constexpr tap::algorithms::SmoothPidConfig YAW_PID_CONFIG = {
 };
 
 static constexpr tap::algorithms::SmoothPidConfig PITCH_PID_CONFIG = {
-    .kp = 129'183.1f,
-    .ki = 0.0f,
-    .kd = 0.0f,
-    .maxICumulative = 0.0f,
+    .kp = 72'183.1f,
+    .ki = 100.0f,
+    .kd = 1000.0f,
+    .maxICumulative = 10.0f,
     .maxOutput = 20000.0f,
     .tQDerivativeKalman = 1.0f,
     .tRDerivativeKalman = 10.0f,
