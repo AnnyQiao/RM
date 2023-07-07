@@ -69,6 +69,8 @@ static constexpr tap::can::CanBus CAN_BUS2 = tap::can::CanBus::CAN_BUS1;
 static constexpr int DESIRED_RPM =1000;
 tap::motor::DjiMotor agimotor(::DoNotUse_getDrivers(),agitatorID,CAN_BUS2,false,"cool motor");
 
+tap::motor::DjiMotor l1(::DoNotUse_getDrivers(),tap::motor::MOTOR1,CAN_BUS2,false,"cool motor");
+
 
 static void initializePWM(tap::Drivers *drivers)
 {
@@ -84,26 +86,41 @@ static void initializePWM(tap::Drivers *drivers)
     drivers->pwm.write(0.06,pwmPin1);
     drivers->pwm.write(0.06,pwmPin2);
     modm::delay_ms(2000);
-    drivers->pwm.write(0.125,pwmPin1);
-    drivers->pwm.write(0.125,pwmPin2);
-    modm::delay_ms(2000);
+    drivers->pwm.write(0.11,pwmPin1);
+    drivers->pwm.write(0.11,pwmPin2);
+    modm::delay_ms(500);
     
 // every time robot got killed or power off, initialize the gpio again
 // better to make it to the button
 }
 
+
+
 static void agitatorSpin(tap::Drivers *drivers)
 {
     /*tap::motor::DjiMotor agitatorMotor(::DoNotUse_getDrivers(), agitatorID, CAN_BUS,false,"cool motor"); */
-    bool spin = (drivers->remote.getSwitch(tap::Remote::Switch::RIGHT_SWITCH) == tap::Remote::SwitchState::UP);
+    bool spin = (drivers->remote.getSwitch(tap::Remote::Switch::LEFT_SWITCH) == tap::Remote::SwitchState::UP) || drivers->remote.getMouseL();
+    bool inv = (drivers->remote.getSwitch(tap::Remote::Switch::LEFT_SWITCH) == tap::Remote::SwitchState::DOWN) || drivers->remote.getMouseR();
     if(spin){
-        agimotor.setDesiredOutput(static_cast<int32_t>(500));  
+        agimotor.setDesiredOutput(static_cast<int32_t>(2000));  
+    }
+    else if(inv){
+        agimotor.setDesiredOutput(static_cast<int32_t>(-2000));  
     }
     else{
         agimotor.setDesiredOutput(static_cast<int32_t>(0));  
     }
     drivers->djiMotorTxHandler.processCanSendData();
 }
+
+static void rotate(tap::Drivers *drivers) {
+    float wheelInput = drivers->remote.getWheel() / 660.0F;
+    drivers->leds.set(tap::gpio::Leds::Blue, wheelInput > 0.8F);
+    drivers->leds.set(tap::gpio::Leds::Red, wheelInput < -0.8F);
+    l1.setDesiredOutput(static_cast<int16_t>(5000));
+    drivers->djiMotorTxHandler.processCanSendData();
+}
+
 
 int main()
 {
@@ -134,6 +151,7 @@ int main()
             PROFILE(drivers->profiler, drivers->commandScheduler.run, ());
             PROFILE(drivers->profiler, drivers->djiMotorTxHandler.processCanSendData, ());
             agitatorSpin(drivers);
+            rotate(drivers);
         }
         modm::delay_us(10);
     }
