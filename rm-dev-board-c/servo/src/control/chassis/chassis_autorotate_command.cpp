@@ -94,7 +94,7 @@ void ChassisAutorotateCommand::execute()
 
         float turretAngleFromCenter = yawMotor->getAngleFromCenter();
 
-        if (turretAngleFromCenter < 5) {
+        if (turretAngleFromCenter < 500) {
             chassisAutorotating = false;
         }
 

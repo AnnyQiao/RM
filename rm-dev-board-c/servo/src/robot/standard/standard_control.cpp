@@ -8,7 +8,8 @@
 #include "tap/drivers.hpp"
 #include "src/drivers_singleton.hpp"
 
-// #include "aruwsrc/control/agitator/velocity_agitator_subsystem.hpp"
+// #include "src/control/agitator/velocity_agitator_subsystem.hpp"
+// #include "src/control/a/example_subsystem.hpp"
 // #include "aruwsrc/control/chassis/beyblade_command.hpp"
 #include "src/control/chassis/chassis_autorotate_command.hpp"
 // #include "aruwsrc/control/client-display/client_display_command.hpp"
@@ -100,6 +101,11 @@ xcysrc::control::turret::TurretSubsystem turret(
 xcysrc::chassis::MecanumChassisSubsystem chassis(drivers());
 
 // VelocityAgitatorSubsystem agitator(
+//     drivers(),
+//     constants::AGITATOR_PID_CONFIG,
+//     constants::AGITATOR_CONFIG);
+
+// ExampleSubsystem agitator(
 //     drivers(),
 //     constants::AGITATOR_PID_CONFIG,
 //     constants::AGITATOR_CONFIG);

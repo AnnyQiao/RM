@@ -65,9 +65,9 @@ static void updateIo(tap::Drivers *drivers);
 using namespace xcysrc::standard;
 
 static constexpr tap::motor::MotorId agitatorID = tap::motor::MOTOR7;
-static constexpr tap::can::CanBus CAN_BUS = tap::can::CanBus::CAN_BUS1;
+static constexpr tap::can::CanBus CAN_BUS2 = tap::can::CanBus::CAN_BUS1;
 static constexpr int DESIRED_RPM =1000;
-tap::motor::DjiMotor agimotor(::DoNotUse_getDrivers(),agitatorID,CAN_BUS,false,"cool motor");
+tap::motor::DjiMotor agimotor(::DoNotUse_getDrivers(),agitatorID,CAN_BUS2,false,"cool motor");
 
 
 static void initializePWM(tap::Drivers *drivers)
@@ -78,15 +78,15 @@ static void initializePWM(tap::Drivers *drivers)
     tap::gpio::Pwm::Pin pwmPin1= tap::gpio::Pwm::Pin::C1;
     drivers->pwm.setTimerFrequency(tap::gpio::Pwm::Timer::TIMER1, 100);
     tap::gpio::Pwm::Pin pwmPin2= tap::gpio::Pwm::Pin::C2;
-    drivers->pwm.write(0.2,pwmPin1);
-    drivers->pwm.write(0.2,pwmPin2);
+    drivers->pwm.write(.2,pwmPin1);
+    drivers->pwm.write(.2,pwmPin2);
     modm::delay_ms(2000);
     drivers->pwm.write(0.06,pwmPin1);
     drivers->pwm.write(0.06,pwmPin2);
     modm::delay_ms(2000);
     drivers->pwm.write(0.125,pwmPin1);
-    drivers->pwm.write(0.125,pwmPin2); 
-    modm::delay_ms(1000);    
+    drivers->pwm.write(0.125,pwmPin2);
+    modm::delay_ms(2000);
     
 // every time robot got killed or power off, initialize the gpio again
 // better to make it to the button
@@ -95,13 +95,18 @@ static void initializePWM(tap::Drivers *drivers)
 static void agitatorSpin(tap::Drivers *drivers)
 {
     /*tap::motor::DjiMotor agitatorMotor(::DoNotUse_getDrivers(), agitatorID, CAN_BUS,false,"cool motor"); */
-    /*bool spin = (drivers->remote.getSwitch(tap::Remote::Switch::RIGHT_SWITCH) == tap::Remote::SwitchState::UP);*/
-    agimotor.setDesiredOutput(static_cast<int32_t>(1000));  
+    bool spin = (drivers->remote.getSwitch(tap::Remote::Switch::RIGHT_SWITCH) == tap::Remote::SwitchState::UP);
+    if(spin){
+        agimotor.setDesiredOutput(static_cast<int32_t>(500));  
+    }
+    else{
+        agimotor.setDesiredOutput(static_cast<int32_t>(0));  
+    }
+    drivers->djiMotorTxHandler.processCanSendData();
 }
 
 int main()
 {
-
     /*
      * NOTE: We are using DoNotUse_getDrivers here because in the main
      *      robot loop we must access the singleton drivers to update
@@ -118,6 +123,7 @@ int main()
     drivers->leds.set(tap::gpio::Leds::Green, true);
     modm::delay_ms(1000);
     drivers->leds.set(tap::gpio::Leds::Green, false);   
+    agimotor.initialize();
     initializePWM(drivers); 
     while (1)
     {
@@ -127,9 +133,9 @@ int main()
         {
             PROFILE(drivers->profiler, drivers->commandScheduler.run, ());
             PROFILE(drivers->profiler, drivers->djiMotorTxHandler.processCanSendData, ());
+            agitatorSpin(drivers);
         }
         modm::delay_us(10);
-        agitatorSpin(drivers);
     }
     return 0;
 }

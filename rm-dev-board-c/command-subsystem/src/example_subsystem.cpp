@@ -23,41 +23,26 @@
 
 ExampleSubsystem::ExampleSubsystem(
     Drivers* drivers,
-    tap::motor::MotorId leftMotorId,
-    tap::motor::MotorId rightMotorId)
+    tap::motor::MotorId aMotorId,
     : tap::control::Subsystem(drivers),
-      velocityPidLeftWheel(PID_P, PID_I, PID_D, PID_MAX_ERROR_SUM, PID_MAX_OUTPUT),
-      velocityPidRightWheel(PID_P, PID_I, PID_D, PID_MAX_ERROR_SUM, PID_MAX_OUTPUT),
       desiredRpm(0),
-      leftWheel(drivers, leftMotorId, CAN_BUS_MOTORS, true, "left example motor"),
-      rightWheel(drivers, rightMotorId, CAN_BUS_MOTORS, false, "right example motor")
+      agitator(drivers, aMotorId, CAN_BUS_MOTORS, true, "left example motor"),
 {
 }
 
 void ExampleSubsystem::initialize()
 {
-    leftWheel.initialize();
-    rightWheel.initialize();
+    agitator.initialize();
 }
 
 void ExampleSubsystem::setDesiredRpm(float desRpm) { desiredRpm = desRpm; }
 
 void ExampleSubsystem::refresh()
 {
-    updateMotorRpmPid(&velocityPidLeftWheel, &leftWheel, desiredRpm);
-    updateMotorRpmPid(&velocityPidRightWheel, &rightWheel, desiredRpm);
+    updateMotor(desiredRpm);
 }
 
-void ExampleSubsystem::updateMotorRpmPid(
-    modm::Pid<float>* pid,
-    tap::motor::DjiMotor* motor,
-    float desiredRpm)
+void ExampleSubsystem::updateMotor(float desiredRpm)
 {
-    pid->update(desiredRpm - motor->getShaftRPM());
-    motor->setDesiredOutput(static_cast<int32_t>(pid->getValue()));
-}
-
-void ExampleSubsystem::runHardwareTests()
-{
-    // TODO
+    agitator->setDesiredOutput(static_cast<int32_t>(desiredRpm));
 }
