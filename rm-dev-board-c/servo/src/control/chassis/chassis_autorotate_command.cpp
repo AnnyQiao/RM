@@ -58,6 +58,8 @@ void ChassisAutorotateCommand::updateAutorotateState()
 {
     float turretYawActualSetpointDiff = abs(yawMotor->getValidChassisMeasurementError());
 
+    
+
     if (chassisAutorotating && chassisSymmetry != ChassisSymmetry::SYMMETRICAL_NONE &&
         !yawMotor->getConfig().limitMotorAngles &&
         turretYawActualSetpointDiff > (M_PI - TURRET_YAW_SETPOINT_MEAS_DIFF_TO_APPLY_AUTOROTATION))
@@ -91,6 +93,11 @@ void ChassisAutorotateCommand::execute()
         updateAutorotateState();
 
         float turretAngleFromCenter = yawMotor->getAngleFromCenter();
+
+        if (turretAngleFromCenter < 5) {
+            chassisAutorotating = false;
+        }
+
 
         if (chassisAutorotating)
         {

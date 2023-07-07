@@ -41,10 +41,11 @@
 
 #include "tap/communication/gpio/pwm.hpp"
 
-#include "src/control/turret/turret_friction_wheel.cpp"
+#include "taproot/src/tap/algorithms/smooth_pid.hpp"
 
-#include "tap/algorithms/smooth_pid.hpp"
+#include "taproot/src/tap/communication/serial/remote_serial_constants.hpp"
 
+#include "taproot/src/tap/communication/serial/remote.hpp"
 
 static constexpr float MAIN_LOOP_FREQUENCY = 500.0f;
 static constexpr float MAHONY_KP = 0.1f;
@@ -63,35 +64,39 @@ static void updateIo(tap::Drivers *drivers);
 
 using namespace xcysrc::standard;
 
-static void agitatorSpin(tao::Drivers *drivers)
+static constexpr tap::motor::MotorId agitatorID = tap::motor::MOTOR7;
+static constexpr tap::can::CanBus CAN_BUS = tap::can::CanBus::CAN_BUS1;
+static constexpr int DESIRED_RPM =1000;
+tap::motor::DjiMotor agimotor(::DoNotUse_getDrivers(),agitatorID,CAN_BUS,false,"cool motor");
+
+
+static void initializePWM(tap::Drivers *drivers)
 {
-    static constexpr tap::motor::MotorId agitatorID = tap::motor::MOTOR7;
-    static constexpr tap::can::CanBus CAN_BUS = tap::can::CanBus::CAN_BUS1;
+    drivers->leds.set(tap::gpio::Leds::Blue, true);
+    modm::delay_ms(1000);
+    drivers->leds.set(tap::gpio::Leds::Blue, false);
+    tap::gpio::Pwm::Pin pwmPin1= tap::gpio::Pwm::Pin::C1;
+    drivers->pwm.setTimerFrequency(tap::gpio::Pwm::Timer::TIMER1, 100);
+    tap::gpio::Pwm::Pin pwmPin2= tap::gpio::Pwm::Pin::C2;
+    drivers->pwm.write(0.2,pwmPin1);
+    drivers->pwm.write(0.2,pwmPin2);
+    modm::delay_ms(2000);
+    drivers->pwm.write(0.06,pwmPin1);
+    drivers->pwm.write(0.06,pwmPin2);
+    modm::delay_ms(2000);
+    drivers->pwm.write(0.125,pwmPin1);
+    drivers->pwm.write(0.125,pwmPin2); 
+    modm::delay_ms(1000);    
+    
+// every time robot got killed or power off, initialize the gpio again
+// better to make it to the button
 }
 
-int velocitySimplePid()
+static void agitatorSpin(tap::Drivers *drivers)
 {
-    tap::algorithms::SmoothPid velocityPidController(10, 0, 0, 0, 8000, 1, 0, 1, 0);
-    while (1)
-    {
-        if (sendMotorTimeout.execute())
-        {
-            // bool b = drivers->digital.read(tap::gpio::Digital::Button);
-            bool b = drivers->remote.getChannel(tap::Remote::Channel::LEFT_VERTICAL) < 0.5;
-
-            velocityPidController.runControllerDerivateError(
-                (b ? 0 : DESIRED_RPM) - motor.getShaftRPM(),
-                1);
-            motor.setDesiredOutput(static_cast<int32_t>(velocityPidController.getOutput()));
-
-            drivers->djiMotorTxHandler.processCanSendData();
-            drivers->leds.set(tap::gpio::Leds::Blue, b);
-        }
-        drivers->remote.read();
-        drivers->canRxHandler.pollCanData();
-        modm::delay_us(10);
-    }
-    return 0;
+    /*tap::motor::DjiMotor agitatorMotor(::DoNotUse_getDrivers(), agitatorID, CAN_BUS,false,"cool motor"); */
+    /*bool spin = (drivers->remote.getSwitch(tap::Remote::Switch::RIGHT_SWITCH) == tap::Remote::SwitchState::UP);*/
+    agimotor.setDesiredOutput(static_cast<int32_t>(1000));  
 }
 
 int main()
@@ -113,18 +118,18 @@ int main()
     drivers->leds.set(tap::gpio::Leds::Green, true);
     modm::delay_ms(1000);
     drivers->leds.set(tap::gpio::Leds::Green, false);   
-    
+    initializePWM(drivers); 
     while (1)
     {
         // do this as fast as you can
         PROFILE(drivers->profiler, updateIo, (drivers));
-
         if (sendMotorTimeout.execute())
         {
             PROFILE(drivers->profiler, drivers->commandScheduler.run, ());
             PROFILE(drivers->profiler, drivers->djiMotorTxHandler.processCanSendData, ());
         }
         modm::delay_us(10);
+        agitatorSpin(drivers);
     }
     return 0;
 }

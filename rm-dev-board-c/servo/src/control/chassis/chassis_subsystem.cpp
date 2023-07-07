@@ -32,7 +32,7 @@ MecanumChassisSubsystem::MecanumChassisSubsystem(tap::Drivers* drivers)
           "right front drive motor"),
       rightBackMotor(
           drivers,
-          tap::motor::MOTOR4,
+          tap::motor::MOTOR7,
           tap::can::CanBus::CAN_BUS1,
           false,
           "right back drive motor"),
